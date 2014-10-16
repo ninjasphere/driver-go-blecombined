@@ -1,0 +1,10 @@
+{
+  "id": "com.ninjablocks.blecombined",
+  "name": "BLE combined",
+  "version": "0.1.0",
+  "description": "A driver BLE devices",
+  "main": "driver-go-blecombined",
+  "author": "Nick Clark <nick@ninjablocks.com>",
+  "license": "MIT",
+  "maxMemory": 5
+}
