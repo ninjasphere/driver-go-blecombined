@@ -15,6 +15,8 @@ const (
 	moistureEndHandle      = 55
 	temperatureStartHandle = 48
 	temperatureEndHandle   = 51
+	waypointStartHandle    = 45
+	waypointEndHandle      = 48
 	dataInterval           = time.Second * 5
 	sleepInterval          = dataInterval
 	// sleepInterval          = time.Minute * 30

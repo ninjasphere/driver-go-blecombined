@@ -48,8 +48,6 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 		},
 	}
 
-	// fplog.Debugf("dumping driver")
-	// spew.Dump(driver)
 	conn := driver.conn
 
 	fp.temperatureChannel = channels.NewTemperatureChannel(fp)

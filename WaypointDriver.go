@@ -60,8 +60,7 @@ func (w *WaypointDriver) sendRssi(device string, name string, waypoint string, r
 		IsSphere: isSphere,
 		name:     name,
 	}
-	// wplog.Debugf("got RSSI")
-	// spew.Dump(ninjaPacket)
+
 	w.conn.SendNotification("$device/"+device+"/TEMPPATH/rssi", ninjaPacket)
 
 }
@@ -108,16 +107,6 @@ func (w *WaypointDriver) startWaypointLoop() {
 	}()
 }
 
-// reverse returns a reversed copy of u.
-func reverse(u []byte) []byte {
-	l := len(u)
-	b := make([]byte, l)
-	for i := 0; i < l/2+1; i++ {
-		b[i], b[l-i-1] = u[l-i-1], u[i]
-	}
-	return b
-}
-
 func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 	if w.activeWaypoints[device.Address] {
 		return
@@ -129,11 +118,8 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 
 	if device.Connected == nil {
 		device.Connected = func() {
-			wplog.Infof("Connected to waypoint: %s", device.Address)
-			//spew.Dump(device.Advertisement)
-
-			// XXX: Yes, magic numbers.... this enables the notification from our Waypoints
-			w.client.Notify(device.Address, true, 45, 48, true, false)
+			wplog.Debugf("Connected to waypoint: %s", device.Address)
+			w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
 		}
 
 		device.Disconnected = func() {
@@ -145,16 +131,11 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 		device.Notification = func(notification *gatt.Notification) {
 			wplog.Debugf("Got RSSI notification!")
 
-			//XXX: Add the ieee into the payload somehow??
 			var payload waypointPayload
 			err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)
 			if err != nil {
 				wplog.Errorf("Failed to read waypoint payload : %s", err)
 			}
-
-			//	ieee := net.HardwareAddr(reverse(notification.Data[4:]))
-
-			//spew.Dump("ieee:", payload)
 
 			packet := &adPacket{
 				Device:   fmt.Sprintf("%x", reverse(notification.Data[4:])),
@@ -164,7 +145,6 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 			}
 
 			w.sendRssi(packet.Device, "", packet.Waypoint, packet.Rssi, packet.IsSphere)
-			//mesh.send(packet)
 		}
 	}
 
@@ -203,4 +183,14 @@ func (w *WaypointDriver) Start() error {
 func (w *WaypointDriver) Stop() error {
 	w.running = false
 	return nil
+}
+
+// reverse returns a reversed copy of u.
+func reverse(u []byte) []byte {
+	l := len(u)
+	b := make([]byte, l)
+	for i := 0; i < l/2+1; i++ {
+		b[i], b[l-i-1] = u[l-i-1], u[i]
+	}
+	return b
 }
