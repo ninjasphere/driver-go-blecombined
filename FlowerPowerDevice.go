@@ -50,8 +50,13 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 
 	conn := driver.conn
 
+	err := conn.ExportDevice(fp)
+	if err != nil {
+		fplog.Fatalf("Failed to export flowerpower %+v %s", fp, err)
+	}
+
 	fp.temperatureChannel = channels.NewTemperatureChannel(fp)
-	err := conn.ExportChannel(fp, fp.temperatureChannel, "temperature")
+	err = conn.ExportChannel(fp, fp.temperatureChannel, "temperature")
 	if err != nil {
 		fplog.Fatalf("Failed to export flowerpower temperature channel %s, dumping device info", err)
 		spew.Dump(fp)
@@ -74,11 +79,6 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 	gattDevice.Connected = fp.deviceConnected
 	gattDevice.Disconnected = fp.deviceDisconnected
 	gattDevice.Notification = fp.handleFPNotification
-
-	err = conn.ExportDevice(fp)
-	if err != nil {
-		fplog.Fatalf("Failed to export flowerpower %+v %s", fp, err)
-	}
 
 	fp.startFPLoop(gattDevice)
 

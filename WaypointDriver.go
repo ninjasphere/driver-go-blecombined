@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/ninjasphere/go-ninja/logger"
+	// "github.com/ninjasphere/go-ninja/logger"
 	"strings"
 	"time"
 
@@ -16,7 +16,7 @@ import (
 	// "github.com/davecgh/go-spew/spew"
 )
 
-var wplog = logger.GetLogger("driver-go-waypoint")
+// var wplog = logger.GetLogger("driver-go-waypoint")
 
 type waypointPayload struct {
 	Sequence    uint8
@@ -51,7 +51,7 @@ type WaypointDriver struct {
 func (w *WaypointDriver) sendRssi(device string, name string, waypoint string, rssi int8, isSphere bool) {
 	device = strings.ToUpper(device)
 
-	wplog.Debugf(">> Device:%s Waypoint:%s Rssi: %d", device, waypoint, rssi)
+	log.Debugf(">> Device:%s Waypoint:%s Rssi: %d", device, waypoint, rssi)
 
 	ninjaPacket := ninjaPacket{
 		Device:   device,
@@ -69,7 +69,7 @@ func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
 	conn, err := ninja.Connect("Waypoint")
 
 	if err != nil {
-		wplog.Fatalf("Failed to create Waypoint driver: %s", err)
+		log.Fatalf("Failed to create Waypoint driver: %s", err)
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
 	err = conn.ExportDriver(myWaypointDriver)
 
 	if err != nil {
-		wplog.Fatalf("Failed to export waypoint driver: %s", err)
+		log.Fatalf("Failed to export waypoint driver: %s", err)
 		return nil, err
 	}
 
@@ -98,9 +98,9 @@ func (w *WaypointDriver) startWaypointLoop() {
 			if w.running == true {
 				time.Sleep(time.Second)
 				for id, active := range w.activeWaypoints {
-					wplog.Debugf("Waypoint %s is active? %t", id, active)
+					log.Debugf("Waypoint %s is active? %t", id, active)
 				}
-				wplog.Debugf("%d waypoint(s) active", len(w.activeWaypoints))
+				log.Debugf("%d waypoint(s) active", len(w.activeWaypoints))
 				w.publishMessage("$location/waypoints", len(w.activeWaypoints))
 			}
 		}
@@ -118,23 +118,23 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 
 	if device.Connected == nil {
 		device.Connected = func() {
-			wplog.Debugf("Connected to waypoint: %s", device.Address)
+			log.Debugf("Connected to waypoint: %s", device.Address)
 			w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
 		}
 
 		device.Disconnected = func() {
-			wplog.Debugf("Disconnected from waypoint: %s", device.Address)
+			log.Debugf("Disconnected from waypoint: %s", device.Address)
 
 			w.activeWaypoints[device.Address] = false
 		}
 
 		device.Notification = func(notification *gatt.Notification) {
-			wplog.Debugf("Got RSSI notification!")
+			log.Debugf("Got RSSI notification!")
 
 			var payload waypointPayload
 			err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)
 			if err != nil {
-				wplog.Errorf("Failed to read waypoint payload : %s", err)
+				log.Errorf("Failed to read waypoint payload : %s", err)
 			}
 
 			packet := &adPacket{
@@ -150,7 +150,7 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 
 	err := w.client.Connect(device.Address, device.PublicAddress)
 	if err != nil {
-		wplog.Errorf("Connect error:%s", err)
+		log.Errorf("Connect error:%s", err)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (w *WaypointDriver) publishMessage(topic string, packet interface{}) {
 	if err == nil {
 		w.conn.GetMqttClient().Publish(mqtt.QoS(0), topic, p)
 	} else {
-		wplog.Fatalf("marshalling error for %v", packet)
+		log.Fatalf("marshalling error for %v", packet)
 	}
 }
 
@@ -175,7 +175,7 @@ func (d *WaypointDriver) SetEventHandler(sendEvent func(event string, payload in
 }
 
 func (w *WaypointDriver) Start() error {
-	wplog.Debugf("Starting waypoint driver")
+	log.Debugf("Starting waypoint driver")
 	w.running = true
 	return nil
 }
