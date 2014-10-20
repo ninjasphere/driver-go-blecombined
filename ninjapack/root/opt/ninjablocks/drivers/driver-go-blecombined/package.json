@@ -1,0 +1,10 @@
+{
+  "id": "com.ninjablocks.blecombined",
+  "name": "BLE Combined",
+  "version": "0.1.0",
+  "description": "A combined driver for Flower Power and BLE waypoints",
+  "main": "driver-go-blecombined",
+  "author": "Nick Clark <nick@ninjablocks.com>",
+  "license": "MIT",
+  "maxMemory": 10
+}
