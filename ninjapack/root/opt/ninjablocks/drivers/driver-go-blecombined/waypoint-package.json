@@ -1,0 +1,10 @@
+{
+  "id": "com.ninjablocks.waypoint",
+  "name": "Waypoint",
+  "version": "0.1.0",
+  "description": "A driver for BLE waypoints",
+  "main": "driver-go-waypoint",
+  "author": "Nick Clark <nick@ninjablocks.com>",
+  "license": "MIT",
+  "maxMemory": 5
+}
