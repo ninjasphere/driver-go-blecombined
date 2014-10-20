@@ -120,17 +120,17 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 func (fp *FlowerPower) handleFPNotification(notification *gatt.Notification) {
 	if notification.Handle == sunlightHandle {
 		sunlight := parseSunlight(notification.Data)
-		fplog.Infof("Got sunlight: %f", sunlight)
+		fplog.Debugf("Got sunlight: %f", sunlight)
 		fp.illuminanceChannel.SendState(sunlight)
 
 	} else if notification.Handle == moistureHandle {
 		moisture := parseMoisture(notification.Data)
-		fplog.Infof("Got moisture: %f", moisture)
+		fplog.Debugf("Got moisture: %f", moisture)
 		fp.moistureChannel.SendState(moisture)
 
 	} else if notification.Handle == temperatureHandle {
 		temperature := parseTemperature(notification.Data)
-		fplog.Infof("Got temperature: %f", temperature)
+		fplog.Debugf("Got temperature: %f", temperature)
 		fp.temperatureChannel.SendState(temperature)
 
 	} else {

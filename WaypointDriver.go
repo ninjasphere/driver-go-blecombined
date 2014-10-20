@@ -123,7 +123,7 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 		}
 
 		device.Disconnected = func() {
-			wplog.Infof("Disconnected from waypoint: %s", device.Address)
+			wplog.Debugf("Disconnected from waypoint: %s", device.Address)
 
 			w.activeWaypoints[device.Address] = false
 		}
