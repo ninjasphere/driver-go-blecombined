@@ -43,7 +43,7 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 				"ninja:manufacturer": "Parrot",
 				"ninja:productName":  "FlowerPower",
 				"ninja:productType":  "FlowerPower",
-				"ninja:thingType":    "plant sensor",
+				"ninja:thingType":    "plantsensor",
 			},
 		},
 	}
