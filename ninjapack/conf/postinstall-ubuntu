@@ -1,0 +1,2 @@
+/opt/ninjablocks/bin/nservice -q driver-go-blecombined stop
+/opt/ninjablocks/bin/nservice -q driver-go-blecombined start
