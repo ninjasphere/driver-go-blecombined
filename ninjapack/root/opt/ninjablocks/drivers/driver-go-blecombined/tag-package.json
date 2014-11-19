@@ -1,0 +1,10 @@
+{
+  "id": "com.ninjablocks.bletag",
+  "name": "Locater Tag",
+  "version": "0.1.0",
+  "description": "A driver for BLE locater tags",
+  "main": "driver-go-bletag",
+  "author": "Nick Clark <nick@ninjablocks.com>",
+  "license": "MIT",
+  "maxMemory": 10
+}
