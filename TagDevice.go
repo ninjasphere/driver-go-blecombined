@@ -25,6 +25,7 @@ func NewBLETag(driver *BLETagDriver, gattDevice *gatt.DiscoveredDevice) error {
 		// log.Debugf("Already found tag %s", gattDevice.Address)
 		return nil
 	} else {
+		log.Debugf("Found BLE Tag %s", gattDevice.Address)
 		name := "BLE Tag"
 
 		bt := &BLETag{
