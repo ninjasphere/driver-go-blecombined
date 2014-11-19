@@ -5,9 +5,10 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/ninjasphere/go-ninja/logger"
 	"strings"
 	"time"
+
+	"github.com/ninjasphere/go-ninja/logger"
 
 	"git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/ninjasphere/gatt"
@@ -66,6 +67,7 @@ func (w *WaypointDriver) sendRssi(device string, name string, waypoint string, r
 }
 
 func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
+
 	conn, err := ninja.Connect("Waypoint")
 
 	if err != nil {

@@ -36,11 +36,11 @@ func main() {
 		},
 	}
 
-	// fpDriver, err = NewFlowerPowerDriver(client)
-	// if err != nil {
-	// 	log.Errorf("Failed to create FlowerPower driver: ", err)
-	// }
-	//
+	fpDriver, err = NewFlowerPowerDriver(client)
+	if err != nil {
+		log.Errorf("Failed to create FlowerPower driver: ", err)
+	}
+
 	// wpDriver, err = NewWaypointDriver(client)
 	// if err != nil {
 	// 	log.FatalError(err, "Failed to create waypoint driver")
@@ -75,28 +75,27 @@ func main() {
 }
 
 func handleAdvertisement(device *gatt.DiscoveredDevice) {
-	// if device.Advertisement.LocalName == "NinjaSphereWaypoint" {
-	// 	log.Debugf("Found waypoint %s", device.Address)
-	// 	wpDriver.handleSphereWaypoint(device)
-	// 	return
-	// }
-	//
-	// for uuid := range device.Advertisement.ServiceUuids {
-	// 	if uuid == flowerPowerServiceUuid {
-	// 		if fpDriver.announcedFlowerPowers[device.Address] {
-	// 			return
-	// 		}
-	// 		log.Debugf("Found Flower Power %s", device.Address)
-	// 		err := NewFlowerPower(fpDriver, device)
-	// 		if err != nil {
-	// 			log.Errorf("Error creating FlowerPower device ", err)
-	// 		}
-	// 	}
-	// }
+	if device.Advertisement.LocalName == "NinjaSphereWaypoint" {
+		log.Debugf("Found waypoint %s", device.Address)
+		wpDriver.handleSphereWaypoint(device)
+	}
+
+	for uuid := range device.Advertisement.ServiceUuids {
+		if uuid == flowerPowerServiceUuid {
+			if fpDriver.announcedFlowerPowers[device.Address] {
+				return
+			}
+			log.Debugf("Found Flower Power %s", device.Address)
+			err := NewFlowerPower(fpDriver, device)
+			if err != nil {
+				log.Errorf("Error creating FlowerPower device ", err)
+			}
+		}
+	}
 
 	for uuid := range device.Advertisement.ServiceUuids {
 		if uuid == stickNFindServiceUuid {
-			log.Debugf("Found sticknfind at address " + device.Address)
+			log.Debugf("Found BLE Tag %s", device.Address)
 			err := NewBLETag(tagDriver, device)
 			if err != nil {
 				log.Errorf("Error creating BLE Tag device ", err)
