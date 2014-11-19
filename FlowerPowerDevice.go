@@ -98,7 +98,7 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 					if err != nil {
 						fplog.Errorf("Flowerpower connect error:%s", err)
 					}
-					time.Sleep(time.Second * 5) //sorry :(
+					time.Sleep(time.Second * 10) //sorry :(
 				}
 
 				if fp.connected == true {
