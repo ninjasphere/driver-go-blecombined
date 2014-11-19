@@ -97,13 +97,8 @@ func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
 func (w *WaypointDriver) startWaypointLoop() {
 	go func() {
 		for {
+			time.Sleep(time.Second)
 			if w.running == true {
-				wplog.Debugf("Woohoo waypoint driver is running")
-				time.Sleep(time.Second)
-				for id, active := range w.activeWaypoints {
-					wplog.Debugf("Waypoint %s is active? %t", id, active)
-				}
-				wplog.Debugf("%d waypoint(s) active", len(w.activeWaypoints))
 				w.publishMessage("$location/waypoints", len(w.activeWaypoints))
 			}
 		}
@@ -132,7 +127,6 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 		}
 
 		device.Notification = func(notification *gatt.Notification) {
-			wplog.Debugf("Got RSSI notification!")
 
 			var payload waypointPayload
 			err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)

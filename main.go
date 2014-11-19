@@ -41,10 +41,10 @@ func main() {
 		log.Errorf("Failed to create FlowerPower driver: ", err)
 	}
 
-	// wpDriver, err = NewWaypointDriver(client)
-	// if err != nil {
-	// 	log.FatalError(err, "Failed to create waypoint driver")
-	// }
+	wpDriver, err = NewWaypointDriver(client)
+	if err != nil {
+		log.FatalError(err, "Failed to create waypoint driver")
+	}
 
 	tagDriver, err = NewBLETagDriver(client)
 	if err != nil {
