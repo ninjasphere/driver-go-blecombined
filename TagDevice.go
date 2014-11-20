@@ -90,7 +90,8 @@ func (fp *BLETag) SetEventHandler(sendEvent func(event string, payload interface
 }
 
 func (fp *BLETag) Identify() error {
-	for !fp.connected {
+	numRetries := 0
+	for !fp.connected && numRetries < 10 {
 		log.Debugf("Connecting to tag %s", fp.gattDevice.Address)
 		// spew.Dump(fp)
 		err := client.Connect(fp.gattDevice.Address, fp.gattDevice.PublicAddress)
@@ -99,6 +100,7 @@ func (fp *BLETag) Identify() error {
 			return err
 		}
 		time.Sleep(time.Second * 3) //call back on connect?
+		numRetries++
 	}
 
 	cmds := make([]string, 1)
