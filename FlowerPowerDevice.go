@@ -89,6 +89,7 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 	go func() {
 		for {
+			time.Sleep(time.Second * 1)
 
 			if fp.driver.running == true {
 
@@ -98,7 +99,7 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 					if err != nil {
 						fplog.Errorf("Flowerpower connect error:%s", err)
 					}
-					time.Sleep(time.Second * 10) //sorry :(
+					time.Sleep(time.Second * 5) //sorry :(
 				}
 
 				if fp.connected == true {

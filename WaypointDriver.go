@@ -97,7 +97,7 @@ func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
 func (w *WaypointDriver) startWaypointLoop() {
 	go func() {
 		for {
-			time.Sleep(time.Second)
+			time.Sleep(1 * time.Second)
 			if w.running == true {
 				w.publishMessage("$location/waypoints", len(w.activeWaypoints))
 			}
@@ -106,52 +106,54 @@ func (w *WaypointDriver) startWaypointLoop() {
 }
 
 func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
-	if w.activeWaypoints[device.Address] {
-		wplog.Debugf("waypoint %s already handled", device.Address)
-		return
-	}
-
-	if device.Advertisement.LocalName != "NinjaSphereWaypoint" {
-		return
-	}
-
-	if device.Connected == nil {
-		device.Connected = func() {
-			wplog.Debugf("Connected to waypoint: %s", device.Address)
-			w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
+	if w.running {
+		if w.activeWaypoints[device.Address] {
+			wplog.Debugf("waypoint %s already handled", device.Address)
+			return
 		}
 
-		device.Disconnected = func() {
-			wplog.Debugf("Disconnected from waypoint: %s", device.Address)
-			w.activeWaypoints[device.Address] = false
+		if device.Advertisement.LocalName != "NinjaSphereWaypoint" {
+			return
 		}
 
-		device.Notification = func(notification *gatt.Notification) {
-
-			var payload waypointPayload
-			err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)
-			if err != nil {
-				wplog.Errorf("Failed to read waypoint payload : %s", err)
+		if device.Connected == nil {
+			device.Connected = func() {
+				wplog.Debugf("Connected to waypoint: %s", device.Address)
+				w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
 			}
 
-			packet := &adPacket{
-				Device:   fmt.Sprintf("%x", reverse(notification.Data[4:])),
-				Waypoint: strings.Replace(device.Address, ":", "", -1),
-				Rssi:     payload.Rssi,
-				IsSphere: false,
+			device.Disconnected = func() {
+				wplog.Debugf("Disconnected from waypoint: %s", device.Address)
+				w.activeWaypoints[device.Address] = false
 			}
 
-			w.sendRssi(packet.Device, "", packet.Waypoint, packet.Rssi, packet.IsSphere)
+			device.Notification = func(notification *gatt.Notification) {
+
+				var payload waypointPayload
+				err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)
+				if err != nil {
+					wplog.Errorf("Failed to read waypoint payload : %s", err)
+				}
+
+				packet := &adPacket{
+					Device:   fmt.Sprintf("%x", reverse(notification.Data[4:])),
+					Waypoint: strings.Replace(device.Address, ":", "", -1),
+					Rssi:     payload.Rssi,
+					IsSphere: false,
+				}
+
+				w.sendRssi(packet.Device, "", packet.Waypoint, packet.Rssi, packet.IsSphere)
+			}
 		}
-	}
 
-	err := w.client.Connect(device.Address, device.PublicAddress)
-	if err != nil {
-		wplog.Errorf("Connect error:%s", err)
-		return
-	}
+		err := w.client.Connect(device.Address, device.PublicAddress)
+		if err != nil {
+			wplog.Errorf("Connect error:%s", err)
+			return
+		}
 
-	w.activeWaypoints[device.Address] = true
+		w.activeWaypoints[device.Address] = true
+	}
 }
 
 func (w *WaypointDriver) publishMessage(topic string, packet interface{}) {

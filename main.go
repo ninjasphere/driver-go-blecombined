@@ -95,7 +95,6 @@ func handleAdvertisement(device *gatt.DiscoveredDevice) {
 
 	for uuid := range device.Advertisement.ServiceUuids {
 		if uuid == stickNFindServiceUuid {
-			log.Debugf("Found BLE Tag %s", device.Address)
 			err := NewBLETag(tagDriver, device)
 			if err != nil {
 				log.Errorf("Error creating BLE Tag device ", err)
