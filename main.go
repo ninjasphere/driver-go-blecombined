@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/ninjasphere/gatt"
 	"github.com/ninjasphere/go-ninja/logger"
@@ -64,13 +63,6 @@ func main() {
 	if err != nil {
 		log.FatalError(err, "Failed to start scanning")
 	}
-
-	timer := time.NewTimer(time.Second * 10)
-	go func() {
-		<-timer.C
-		log.Infof("hurk")
-		panic("barf")
-	}()
 
 	//----------------------------------------------------------------------------------------
 
