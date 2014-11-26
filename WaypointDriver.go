@@ -79,7 +79,7 @@ func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
 		conn:            conn,
 		client:          client,
 		activeWaypoints: make(map[string]bool),
-		running:         false,
+		running:         true, //false,
 	}
 
 	err = conn.ExportDriver(myWaypointDriver)

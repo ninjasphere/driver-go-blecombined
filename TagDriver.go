@@ -31,7 +31,7 @@ func NewBLETagDriver(client *gatt.Client) (*BLETagDriver, error) {
 	driver := &BLETagDriver{
 		conn:       conn,
 		gattClient: client,
-		running:    false,
+		running:    true, //false,
 	}
 
 	err = conn.ExportDriver(driver)
