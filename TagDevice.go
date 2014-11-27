@@ -103,13 +103,14 @@ func (fp *BLETag) Identify() error {
 			time.Sleep(time.Second * 3) //call back on connect?
 			numRetries++
 		}
+		cmds := make([]string, 1)
+		cmds[0] = "121b0002"
+		client.SendRawCommands(fp.gattDevice.Address, cmds)
+		time.Sleep(time.Second * 3)
+		cmds[0] = "121b0000"
+		client.SendRawCommands(fp.gattDevice.Address, cmds)
+	} else {
+		log.Infof("Driver not running, but received identify command")
 	}
-
-	cmds := make([]string, 1)
-	cmds[0] = "121b0002"
-	client.SendRawCommands(fp.gattDevice.Address, cmds)
-	time.Sleep(time.Second * 3)
-	cmds[0] = "121b0000"
-	client.SendRawCommands(fp.gattDevice.Address, cmds)
 	return nil
 }
