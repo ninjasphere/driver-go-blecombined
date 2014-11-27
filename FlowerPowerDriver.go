@@ -32,7 +32,7 @@ func NewFlowerPowerDriver(client *gatt.Client) (*FlowerPowerDriver, error) {
 	driver := &FlowerPowerDriver{
 		conn:                  conn,
 		gattClient:            client,
-		running:               true, //false,
+		running:               true,
 		announcedFlowerPowers: announcedFlowerPowers,
 	}
 
