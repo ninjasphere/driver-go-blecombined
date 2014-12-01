@@ -3,14 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/ninjasphere/go-ninja/logger"
 
-	"git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/ninjasphere/gatt"
 	"github.com/ninjasphere/go-ninja/api"
 	"github.com/ninjasphere/go-ninja/model"
@@ -79,7 +77,7 @@ func NewWaypointDriver(client *gatt.Client) (*WaypointDriver, error) {
 		conn:            conn,
 		client:          client,
 		activeWaypoints: make(map[string]bool),
-		running:         true, //false,
+		running:         true,
 	}
 
 	err = conn.ExportDriver(myWaypointDriver)
@@ -99,7 +97,14 @@ func (w *WaypointDriver) startWaypointLoop() {
 		for {
 			time.Sleep(1 * time.Second)
 			if w.running == true {
-				w.publishMessage("$location/waypoints", len(w.activeWaypoints))
+				numWaypoints := 0
+				for id, active := range w.activeWaypoints {
+					log.Debugf("Waypoint %s is active? %t", id, active)
+					if active {
+						numWaypoints++
+					}
+				}
+				w.conn.PublishRaw("$location/waypoints", numWaypoints)
 			}
 		}
 	}()
@@ -107,12 +112,13 @@ func (w *WaypointDriver) startWaypointLoop() {
 
 func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 	if w.running {
-		if w.activeWaypoints[device.Address] {
+		if w.activeWaypoints[device.Address] == true {
 			wplog.Debugf("waypoint %s already handled", device.Address)
 			return
 		}
 
 		if device.Advertisement.LocalName != "NinjaSphereWaypoint" {
+			wplog.Debugf("device %s not actually sphere waypoint", device.Advertisement.LocalName)
 			return
 		}
 
@@ -120,6 +126,7 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 			device.Connected = func() {
 				wplog.Debugf("Connected to waypoint: %s", device.Address)
 				w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
+				w.activeWaypoints[device.Address] = true
 			}
 
 			device.Disconnected = func() {
@@ -147,21 +154,12 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 		}
 
 		err := w.client.Connect(device.Address, device.PublicAddress)
+		wplog.Debugf("Connecting to sphere waypoint %s", device.PublicAddress)
 		if err != nil {
 			wplog.Errorf("Connect error:%s", err)
 			return
 		}
 
-		w.activeWaypoints[device.Address] = true
-	}
-}
-
-func (w *WaypointDriver) publishMessage(topic string, packet interface{}) {
-	p, err := json.Marshal(packet)
-	if err == nil {
-		w.conn.GetMqttClient().Publish(mqtt.QoS(0), topic, p)
-	} else {
-		wplog.Fatalf("marshalling error for %v", packet)
 	}
 }
 
