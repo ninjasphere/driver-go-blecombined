@@ -16,6 +16,7 @@ type BLETag struct {
 	sendEvent       func(event string, payload interface{}) error
 	gattDevice      *gatt.DiscoveredDevice
 	identifyChannel *channels.IdentifyChannel
+	onOffChannel    *channels.OnOffChannel
 	connected       bool
 }
 
@@ -59,6 +60,13 @@ func NewBLETag(driver *BLETagDriver, gattDevice *gatt.DiscoveredDevice) error {
 			spew.Dump(bt)
 		}
 
+		bt.onOffChannel = channels.NewOnOffChannel(bt)
+		err = conn.ExportChannel(bt, bt.onOffChannel, "on-off")
+		if err != nil {
+			fplog.Fatalf("Failed to export BLE Tag on-off channel %s, dumping device info", err)
+			spew.Dump(bt)
+		}
+
 		gattDevice.Connected = bt.deviceConnected
 		gattDevice.Disconnected = bt.deviceDisconnected
 
@@ -87,6 +95,20 @@ func (fp *BLETag) GetDriver() ninja.Driver {
 
 func (fp *BLETag) SetEventHandler(sendEvent func(event string, payload interface{}) error) {
 	fp.sendEvent = sendEvent
+}
+
+// Only temporary! This shouldn't be an on-off device.
+// We ignore the state....
+func (fp *BLETag) SetOnOff(_ bool) error {
+	err := fp.Identify()
+	if err != nil {
+		return err
+	}
+	return fp.onOffChannel.SendEvent("state", true)
+}
+
+func (fp *BLETag) ToggleOnOff() error {
+	return fp.SetOnOff(true)
 }
 
 func (fp *BLETag) Identify() error {
