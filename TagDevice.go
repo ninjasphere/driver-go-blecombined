@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -100,39 +101,78 @@ func (fp *BLETag) SetEventHandler(sendEvent func(event string, payload interface
 // Only temporary! This shouldn't be an on-off device.
 // We ignore the state....
 func (fp *BLETag) SetOnOff(_ bool) error {
-	err := fp.Identify()
-	if err != nil {
-		return err
+	state, err := fp.Buzz()
+
+	select {
+	case <-state:
+		log.Debugf("Started buzzing")
+		fp.onOffChannel.SendEvent("state", true)
+		<-state
+		log.Debugf("Stopped buzzing")
+		fp.onOffChannel.SendEvent("state", false)
+	case e := <-err:
+		log.Warningf("Failed to buzz", e)
+		return e
 	}
-	return fp.onOffChannel.SendEvent("state", true)
+	return nil
 }
 
 func (fp *BLETag) ToggleOnOff() error {
 	return fp.SetOnOff(true)
 }
 
-func (fp *BLETag) Identify() error {
-	if fp.driver.running {
+func (fp *BLETag) Buzz() (state chan bool, err chan error) {
+
+	state, err = make(chan bool, 2), make(chan error, 1)
+
+	go func() {
+
+		if !fp.driver.running {
+			err <- fmt.Errorf("Driver not running, but received identify command")
+			return
+		}
+
 		numRetries := 0
-		for !fp.connected && numRetries < 10 {
+		for !fp.connected {
 			log.Debugf("Connecting to tag %s", fp.gattDevice.Address)
 			// spew.Dump(fp)
-			err := client.Connect(fp.gattDevice.Address, fp.gattDevice.PublicAddress)
-			if err != nil {
-				log.Errorf("Connect error:%s", err)
-				return err
+
+			e := client.Connect(fp.gattDevice.Address, fp.gattDevice.PublicAddress)
+			if e != nil {
+				err <- fmt.Errorf("Connect error:%s", e)
+				return
 			}
-			time.Sleep(time.Second * 3) //call back on connect?
+
 			numRetries++
+			if numRetries > 10 {
+				err <- fmt.Errorf("Failed to connect to tag")
+				return
+			}
+
+			time.Sleep(time.Second * 3) //call back on connect?
 		}
 		cmds := make([]string, 1)
 		cmds[0] = "121b0002"
 		client.SendRawCommands(fp.gattDevice.Address, cmds)
+		state <- true
 		time.Sleep(time.Second * 3)
 		cmds[0] = "121b0000"
 		client.SendRawCommands(fp.gattDevice.Address, cmds)
-	} else {
-		log.Infof("Driver not running, but received identify command")
+		state <- false
+	}()
+
+	return
+}
+
+func (fp *BLETag) Identify() error {
+	state, err := fp.Buzz()
+
+	select {
+	case <-state:
+		log.Debugf("Started identifying")
+	case e := <-err:
+		log.Warningf("Failed to identify", e)
+		return e
 	}
 	return nil
 }
