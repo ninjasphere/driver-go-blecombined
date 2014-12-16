@@ -20,4 +20,5 @@ const (
 	waypointEndHandle      = 48
 	dataInterval           = time.Second * 5
 	sleepInterval          = time.Minute * 30
+	minRSSI                = -50
 )
