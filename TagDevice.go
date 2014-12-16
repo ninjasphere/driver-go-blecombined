@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -135,7 +136,6 @@ func (fp *BLETag) Buzz() (state chan bool, err chan error) {
 		numRetries := 0
 		for !fp.connected {
 			log.Debugf("Connecting to tag %s", fp.gattDevice.Address)
-			// spew.Dump(fp)
 
 			e := client.Connect(fp.gattDevice.Address, fp.gattDevice.PublicAddress)
 			if e != nil {
@@ -144,9 +144,16 @@ func (fp *BLETag) Buzz() (state chan bool, err chan error) {
 			}
 
 			numRetries++
-			if numRetries > 10 {
+			if numRetries > 5 {
 				err <- fmt.Errorf("Failed to connect to tag")
 				return
+			}
+
+			if numRetries == 3 {
+				log.Debugf("Hit 3 retries, bouncing BLE")
+				exec.Command("hciconfig", "down")
+				time.Sleep(time.Second * 1)
+				exec.Command("hciconfig", "up")
 			}
 
 			time.Sleep(time.Second * 3) //call back on connect?
