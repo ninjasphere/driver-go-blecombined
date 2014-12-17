@@ -94,7 +94,7 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 			if fp.driver.running == true {
 
 				if fp.connected == false {
-					fplog.Debugf("Connecting to Flower Power %s", gattDevice.Address)
+					fplog.Infof("Connecting to Flower Power %s", gattDevice.Address)
 					err := fp.driver.gattClient.Connect(gattDevice.Address, gattDevice.PublicAddress)
 					if err != nil {
 						fplog.Errorf("Flowerpower connect error:%s", err)
@@ -103,13 +103,13 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 				}
 
 				if fp.connected == true {
-					fplog.Debugf("Connected to flower power: %s", fp.gattDevice.Address)
-					fplog.Debugf("Setting up notifications")
+					fplog.Infof("Connected to flower power: %s", fp.gattDevice.Address)
+					fplog.Infof("Setting up notifications")
 					fp.notifyAll()
-					fplog.Debugf("Enabling live mode")
+					fplog.Infof("Enabling live mode")
 					fp.EnableLiveMode()
 					time.Sleep(dataInterval)
-					fplog.Debugf("Disabling live mode")
+					fplog.Infof("Disabling live mode")
 					fp.DisableLiveMode()
 					time.Sleep(sleepInterval)
 				}
@@ -121,17 +121,17 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 func (fp *FlowerPower) handleFPNotification(notification *gatt.Notification) {
 	if notification.Handle == sunlightHandle {
 		sunlight := parseSunlight(notification.Data)
-		fplog.Debugf("Got sunlight: %f", sunlight)
+		fplog.Infof("Got sunlight: %f", sunlight)
 		fp.illuminanceChannel.SendState(sunlight)
 
 	} else if notification.Handle == moistureHandle {
 		moisture := parseMoisture(notification.Data)
-		fplog.Debugf("Got moisture: %f", moisture)
+		fplog.Infof("Got moisture: %f", moisture)
 		fp.moistureChannel.SendState(moisture)
 
 	} else if notification.Handle == temperatureHandle {
 		temperature := parseTemperature(notification.Data)
-		fplog.Debugf("Got temperature: %f", temperature)
+		fplog.Infof("Got temperature: %f", temperature)
 		fp.temperatureChannel.SendState(temperature)
 
 	} else {
@@ -218,7 +218,7 @@ func parseTemperature(data []byte) float64 {
 }
 
 func (fp *FlowerPower) getValFromHandle(handle int) []byte {
-	// log.Debugf("--Readbyhandle-- address: %s handle: %d", fp.gattDevice.Address, handle)
+	// log.Infof("--Readbyhandle-- address: %s handle: %d", fp.gattDevice.Address, handle)
 	data := <-fp.driver.gattClient.ReadByHandle(fp.gattDevice.Address, uint16(handle))
 	return data
 }

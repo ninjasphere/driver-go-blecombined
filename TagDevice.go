@@ -25,10 +25,10 @@ type BLETag struct {
 func NewBLETag(driver *BLETagDriver, gattDevice *gatt.DiscoveredDevice) error {
 
 	if driver.FoundTags[gattDevice.Address] {
-		// log.Debugf("Already found tag %s", gattDevice.Address)
+		// log.Infof("Already found tag %s", gattDevice.Address)
 		return nil
 	} else {
-		log.Debugf("Found BLE Tag %s", gattDevice.Address)
+		log.Infof("Found BLE Tag %s", gattDevice.Address)
 		name := "BLE Tag"
 
 		bt := &BLETag{
@@ -84,7 +84,7 @@ func (fp *BLETag) deviceConnected() {
 
 func (fp *BLETag) deviceDisconnected() {
 	fp.connected = false
-	log.Debugf("Disconnected from tag: %s", fp.gattDevice.Address)
+	log.Infof("Disconnected from tag: %s", fp.gattDevice.Address)
 }
 
 func (fp *BLETag) GetDeviceInfo() *model.Device {
@@ -106,10 +106,10 @@ func (fp *BLETag) SetOnOff(_ bool) error {
 
 	select {
 	case <-state:
-		log.Debugf("Started buzzing")
+		log.Infof("Started buzzing")
 		fp.onOffChannel.SendEvent("state", true)
 		<-state
-		log.Debugf("Stopped buzzing")
+		log.Infof("Stopped buzzing")
 		fp.onOffChannel.SendEvent("state", false)
 	case e := <-err:
 		log.Warningf("Failed to buzz", e)
@@ -135,7 +135,7 @@ func (fp *BLETag) Buzz() (state chan bool, err chan error) {
 
 		numRetries := 0
 		for !fp.connected {
-			log.Debugf("Connecting to tag %s", fp.gattDevice.Address)
+			log.Infof("Connecting to tag %s", fp.gattDevice.Address)
 
 			e := client.Connect(fp.gattDevice.Address, fp.gattDevice.PublicAddress)
 			if e != nil {
@@ -150,7 +150,7 @@ func (fp *BLETag) Buzz() (state chan bool, err chan error) {
 			}
 
 			if numRetries == 3 {
-				log.Debugf("Hit 3 retries, bouncing BLE")
+				log.Infof("Hit 3 retries, bouncing BLE")
 				exec.Command("hciconfig", "down")
 				time.Sleep(time.Second * 1)
 				exec.Command("hciconfig", "up")
@@ -176,7 +176,7 @@ func (fp *BLETag) Identify() error {
 
 	select {
 	case <-state:
-		log.Debugf("Started identifying")
+		log.Infof("Started identifying")
 	case e := <-err:
 		log.Warningf("Failed to identify", e)
 		return e

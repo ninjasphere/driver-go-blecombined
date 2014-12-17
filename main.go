@@ -53,7 +53,7 @@ func main() {
 
 	client.Advertisement = handleAdvertisement
 
-	log.Debugf("Starting client scan")
+	log.Infof("Starting client scan")
 	err = client.Start()
 	if err != nil {
 		log.FatalError(err, "Failed to start client")
@@ -76,7 +76,7 @@ func main() {
 
 func handleAdvertisement(device *gatt.DiscoveredDevice) {
 	if device.Advertisement.LocalName == "NinjaSphereWaypoint" {
-		log.Debugf("Found waypoint %s", device.Address)
+		log.Infof("Found waypoint %s", device.Address)
 		wpDriver.handleSphereWaypoint(device)
 	}
 
@@ -85,7 +85,7 @@ func handleAdvertisement(device *gatt.DiscoveredDevice) {
 			if fpDriver.announcedFlowerPowers[device.Address] {
 				return
 			}
-			log.Debugf("Found Flower Power %s", device.Address)
+			log.Infof("Found Flower Power %s", device.Address)
 			err := NewFlowerPower(fpDriver, device)
 			if err != nil {
 				log.Errorf("Error creating FlowerPower device ", err)

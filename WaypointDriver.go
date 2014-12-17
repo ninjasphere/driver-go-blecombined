@@ -50,7 +50,7 @@ type WaypointDriver struct {
 func (w *WaypointDriver) sendRssi(device string, name string, waypoint string, rssi int8, isSphere bool) {
 	device = strings.ToUpper(device)
 
-	wplog.Debugf(">> Device:%s Waypoint:%s Rssi: %d", device, waypoint, rssi)
+	wplog.Infof(">> Device:%s Waypoint:%s Rssi: %d", device, waypoint, rssi)
 
 	ninjaPacket := ninjaPacket{
 		Device:   device,
@@ -99,7 +99,7 @@ func (w *WaypointDriver) startWaypointLoop() {
 			if w.running == true {
 				numWaypoints := 0
 				for id, active := range w.activeWaypoints {
-					log.Debugf("Waypoint %s is active? %t", id, active)
+					log.Infof("Waypoint %s is active? %t", id, active)
 					if active {
 						numWaypoints++
 					}
@@ -113,24 +113,24 @@ func (w *WaypointDriver) startWaypointLoop() {
 func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 	if w.running {
 		if w.activeWaypoints[device.Address] == true {
-			wplog.Debugf("waypoint %s already handled", device.Address)
+			wplog.Infof("waypoint %s already handled", device.Address)
 			return
 		}
 
 		if device.Advertisement.LocalName != "NinjaSphereWaypoint" {
-			wplog.Debugf("device %s not actually sphere waypoint", device.Advertisement.LocalName)
+			wplog.Infof("device %s not actually sphere waypoint", device.Advertisement.LocalName)
 			return
 		}
 
 		if device.Connected == nil {
 			device.Connected = func() {
-				wplog.Debugf("Connected to waypoint: %s", device.Address)
+				wplog.Infof("Connected to waypoint: %s", device.Address)
 				w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
 				w.activeWaypoints[device.Address] = true
 			}
 
 			device.Disconnected = func() {
-				wplog.Debugf("Disconnected from waypoint: %s", device.Address)
+				wplog.Infof("Disconnected from waypoint: %s", device.Address)
 				w.activeWaypoints[device.Address] = false
 			}
 
@@ -154,7 +154,7 @@ func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 		}
 
 		err := w.client.Connect(device.Address, device.PublicAddress)
-		wplog.Debugf("Connecting to sphere waypoint %s", device.PublicAddress)
+		wplog.Infof("Connecting to sphere waypoint %s", device.PublicAddress)
 		if err != nil {
 			wplog.Errorf("Connect error:%s", err)
 			return
@@ -172,7 +172,7 @@ func (d *WaypointDriver) SetEventHandler(sendEvent func(event string, payload in
 }
 
 func (w *WaypointDriver) Start() error {
-	wplog.Debugf("Starting waypoint driver")
+	wplog.Infof("Starting waypoint driver")
 	w.running = true
 	return nil
 }
