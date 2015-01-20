@@ -53,6 +53,12 @@ func main() {
 
 	client.Advertisement = handleAdvertisement
 
+	client.Rssi = func(address string, name string, rssi int8) {
+		//log.Printf("Rssi update address:%s rssi:%d", address, rssi)
+		wpDriver.sendRssi(strings.Replace(address, ":", "", -1), name, mac, rssi, true)
+		//spew.Dump(device);
+	}
+
 	log.Infof("Starting client scan")
 	err = client.Start()
 	if err != nil {
