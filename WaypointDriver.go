@@ -112,53 +112,38 @@ func (w *WaypointDriver) startWaypointLoop() {
 
 func (w *WaypointDriver) handleSphereWaypoint(device *gatt.DiscoveredDevice) {
 	if w.running {
-		if w.activeWaypoints[device.Address] == true {
-			wplog.Infof("waypoint %s already handled", device.Address)
-			return
-		}
 
-		if device.Advertisement.LocalName != "NinjaSphereWaypoint" {
-			wplog.Infof("device %s not actually sphere waypoint", device.Advertisement.LocalName)
-			return
-		}
+		device.Notification = func(notification *gatt.Notification) {
 
-		if device.Connected == nil {
-			device.Connected = func() {
-				wplog.Infof("Connected to waypoint: %s", device.Address)
-				w.client.Notify(device.Address, true, waypointStartHandle, waypointEndHandle, true, false)
-				w.activeWaypoints[device.Address] = true
+			var payload waypointPayload
+			err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)
+			if err != nil {
+				wplog.Errorf("Failed to read waypoint payload : %s", err)
 			}
 
-			device.Disconnected = func() {
-				wplog.Infof("Disconnected from waypoint: %s", device.Address)
-				w.activeWaypoints[device.Address] = false
+			packet := &adPacket{
+				Device:   fmt.Sprintf("%x", reverse(notification.Data[4:])),
+				Waypoint: strings.Replace(device.Address, ":", "", -1),
+				Rssi:     payload.Rssi,
+				IsSphere: false,
 			}
 
-			device.Notification = func(notification *gatt.Notification) {
-
-				var payload waypointPayload
-				err := binary.Read(bytes.NewReader(notification.Data), binary.LittleEndian, &payload)
-				if err != nil {
-					wplog.Errorf("Failed to read waypoint payload : %s", err)
-				}
-
-				packet := &adPacket{
-					Device:   fmt.Sprintf("%x", reverse(notification.Data[4:])),
-					Waypoint: strings.Replace(device.Address, ":", "", -1),
-					Rssi:     payload.Rssi,
-					IsSphere: false,
-				}
-
-				w.sendRssi(packet.Device, "", packet.Waypoint, packet.Rssi, packet.IsSphere)
-			}
+			w.sendRssi(packet.Device, "", packet.Waypoint, packet.Rssi, packet.IsSphere)
 		}
 
-		err := w.client.Connect(device.Address, device.PublicAddress)
-		wplog.Infof("Connecting to sphere waypoint %s", device.PublicAddress)
+		device.Disconnected = func() {
+			wplog.Infof("Disconnected from waypoint: %s", device.Address)
+			w.activeWaypoints[device.Address] = false
+		}
+
+		err := device.Connect()
+		wplog.Infof("Connected to sphere waypoint %s", device.PublicAddress)
 		if err != nil {
 			wplog.Errorf("Connect error:%s", err)
 			return
 		}
+
+		w.activeWaypoints[device.Address] = true
 
 	}
 }

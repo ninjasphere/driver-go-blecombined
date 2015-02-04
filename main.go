@@ -54,8 +54,8 @@ func main() {
 	client.Advertisement = handleAdvertisement
 
 	client.Rssi = func(address string, name string, rssi int8) {
-		//log.Printf("Rssi update address:%s rssi:%d", address, rssi)
-		wpDriver.sendRssi(strings.Replace(address, ":", "", -1), name, mac, rssi, true)
+		log.Infof("Rssi update address:%s rssi:%d", address, rssi)
+		//wpDriver.sendRssi(strings.Replace(address, ":", "", -1), name, mac, rssi, true)
 		//spew.Dump(device);
 	}
 
@@ -64,6 +64,14 @@ func main() {
 	if err != nil {
 		log.FatalError(err, "Failed to start client")
 	}
+
+	/*d := &gatt.DiscoveredDevice{
+		Address: "FA:7D:16:0E:76:F4",
+	}
+	err = NewBLETag(tagDriver, d)
+	if err != nil {
+		log.Errorf("Error creating BLE Tag device ", err)
+	}*/
 
 	err = client.StartScanning(true)
 	if err != nil {
@@ -81,6 +89,8 @@ func main() {
 }
 
 func handleAdvertisement(device *gatt.DiscoveredDevice) {
+
+	//*
 	if device.Advertisement.LocalName == "NinjaSphereWaypoint" {
 		log.Infof("Found waypoint %s", device.Address)
 		wpDriver.handleSphereWaypoint(device)
@@ -98,15 +108,16 @@ func handleAdvertisement(device *gatt.DiscoveredDevice) {
 			}
 		}
 	}
+	//*/
 
-	for uuid := range device.Advertisement.ServiceUuids {
-		if uuid == stickNFindServiceUuid {
-			if device.Rssi > minRSSI {
-				err := NewBLETag(tagDriver, device)
-				if err != nil {
-					log.Errorf("Error creating BLE Tag device ", err)
-				}
-			}
+	//for uuid := range device.Advertisement.ServiceUuids {
+	//if uuid == stickNFindServiceUuid {
+	if device.Rssi > minRSSI {
+		err := NewBLETag(tagDriver, device)
+		if err != nil {
+			log.Errorf("Error creating BLE Tag device ", err)
 		}
 	}
+	//}
+	//}
 }

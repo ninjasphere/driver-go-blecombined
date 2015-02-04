@@ -76,8 +76,6 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 		spew.Dump(fp)
 	}
 
-	gattDevice.Connected = fp.deviceConnected
-	gattDevice.Disconnected = fp.deviceDisconnected
 	gattDevice.Notification = fp.handleFPNotification
 
 	fp.startFPLoop(gattDevice)
@@ -95,7 +93,7 @@ func (fp *FlowerPower) startFPLoop(gattDevice *gatt.DiscoveredDevice) {
 
 				if fp.connected == false {
 					fplog.Infof("Connecting to Flower Power %s", gattDevice.Address)
-					err := fp.driver.gattClient.Connect(gattDevice.Address, gattDevice.PublicAddress)
+					err := fp.gattDevice.Connect()
 					if err != nil {
 						fplog.Errorf("Flowerpower connect error:%s", err)
 					}
@@ -168,21 +166,16 @@ func (fp *FlowerPower) SetEventHandler(sendEvent func(event string, payload inte
 
 //TOOD: this needs to send via a proper handle and value, rather than sending a raw packet
 func (fp *FlowerPower) EnableLiveMode() {
-	cmds := make([]string, 1)
-	cmds[0] = "12390001"
-	fp.driver.gattClient.SendRawCommands(fp.gattDevice.Address, cmds)
-
+	fp.gattDevice.SendRawCommands([]string{"12390001"})
 }
 
 //TOOD: this needs to send via a proper handle and value, rather than sending a raw packet
 func (fp *FlowerPower) DisableLiveMode() {
-	cmds := make([]string, 1)
-	cmds[0] = "12390000"
-	fp.driver.gattClient.SendRawCommands(fp.gattDevice.Address, cmds)
+	fp.gattDevice.SendRawCommands([]string{"12390000"})
 }
 
 func (fp *FlowerPower) notifyByHandle(startHandle, endHandle uint16) {
-	fp.driver.gattClient.Notify(fp.gattDevice.Address, true, startHandle, endHandle, true, false)
+	fp.gattDevice.Notify(true, startHandle, endHandle, true, false)
 }
 
 func parseSunlight(data []byte) float64 {
@@ -219,7 +212,7 @@ func parseTemperature(data []byte) float64 {
 
 func (fp *FlowerPower) getValFromHandle(handle int) []byte {
 	// log.Infof("--Readbyhandle-- address: %s handle: %d", fp.gattDevice.Address, handle)
-	data := <-fp.driver.gattClient.ReadByHandle(fp.gattDevice.Address, uint16(handle))
+	data := <-fp.gattDevice.ReadByHandle(-uint16(handle))
 	return data
 }
 
