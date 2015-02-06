@@ -43,7 +43,7 @@ func NewBLETag(driver *BLETagDriver, gattDevice *gatt.DiscoveredDevice) error {
 					"ninja:manufacturer": "Sticknfind",
 					"ninja:productName":  "SL6",
 					"ninja:productType":  "BLE Tag",
-					"ninja:thingType":    "BLE Tag",
+					"ninja:thingType":    "tag",
 				},
 			},
 		}
