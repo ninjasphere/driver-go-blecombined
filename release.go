@@ -2,11 +2,7 @@
 
 package main
 
-import (
-	"github.com/bugsnag/bugsnag-go"
-	"github.com/juju/loggo"
-	"github.com/ninjasphere/go-ninja/logger"
-)
+import "github.com/bugsnag/bugsnag-go"
 
 func init() {
 	bugsnag.Configure(bugsnag.Configuration{
