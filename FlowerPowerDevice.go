@@ -69,7 +69,7 @@ func NewFlowerPower(driver *FlowerPowerDriver, gattDevice *gatt.DiscoveredDevice
 		spew.Dump(fp)
 	}
 
-	fp.illuminanceChannel = channels.NewIlluminanceChannel(fp)
+	fp.illuminanceChannel = channels.NewIlluminanceChannel()
 	err = conn.ExportChannel(fp, fp.illuminanceChannel, "illuminance")
 	if err != nil {
 		fplog.Fatalf("Failed to export flowerpower illuminance channel %s, dumping device info", err)
