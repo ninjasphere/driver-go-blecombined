@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/juju/loggo"
 )
 
@@ -56,16 +57,17 @@ func (gc *GattCmd) ReadCharacteristics() ([]*Characteristic, error) {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 
 	for scanner.Scan() {
-		log.Debugf("line %s", scanner.Text())
-
 		params := getAttributes(scanner.Text())
 
-		chars = append(chars, &Characteristic{
+		c := &Characteristic{
 			UUID:            params["uuid"],
 			Handle:          params["handle"],
 			CharValueHandle: params["char_value_handle"],
-		})
+		}
 
+		chars = append(chars, c)
+
+		log.Infof(spew.Sprintf("%#v", c))
 	}
 
 	return chars, nil

@@ -31,6 +31,8 @@ type BLETag struct {
 	identifyChannel *channels.IdentifyChannel
 	onOffChannel    *channels.OnOffChannel
 
+	// currently we are using the bluez gatttool wrapper due to issues with
+	// access characteristics with security enabled.
 	gattCmd   *bluez.GattCmd
 	readChar  *bluez.Characteristic
 	alertChar *bluez.Characteristic
@@ -52,7 +54,7 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 		return nil
 	}
 
-	log.Infof("Found BLE Tag address=%s public=%b", address, device.PublicAddress)
+	log.Infof("Found BLE Tag address=%s public=%v", address, device.PublicAddress)
 
 	name := "BLE Tag"
 
@@ -96,10 +98,10 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 	driver.FoundTags[address] = true
 
 	if device.PublicAddress {
-		bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypePublic)
-	} else {
-		bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypeRandom)
+		return fmt.Errorf("Public addresses not supported, upgrade the firmware!")
 	}
+
+	bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypeRandom)
 
 	chars, err := bt.gattCmd.ReadCharacteristics()
 
@@ -127,7 +129,7 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 	time.Sleep(1 * time.Second)
 
 	if err := bt.gattCmd.WriteCharacteristic(bt.alertChar.CharValueHandle, "0103"); err != nil {
-		return fmt.Errorf("Alert characteristic write failed: %q", err)
+		return fmt.Errorf("Alert characteristic write failed: %v", err)
 	}
 
 	return nil
