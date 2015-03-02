@@ -111,7 +111,7 @@ func run(cmd string, params ...string) (string, error) {
 
 	cmdExec := exec.Command(cmd, params...)
 
-	log.Debugf("exec %s %v", cmd, params)
+	log.Infof("exec %s %v", cmd, params)
 
 	var out bytes.Buffer
 	cmdExec.Stdout = &out

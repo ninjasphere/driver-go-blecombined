@@ -52,7 +52,8 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 		return nil
 	}
 
-	log.Infof("Found BLE Tag %s", address)
+	log.Infof("Found BLE Tag address=%s public=%b", address, device.PublicAddress)
+
 	name := "BLE Tag"
 
 	bt := &BLETag{
@@ -94,7 +95,11 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 
 	driver.FoundTags[address] = true
 
-	bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypeRandom)
+	if device.PublicAddress {
+		bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypePublic)
+	} else {
+		bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypeRandom)
+	}
 
 	chars, err := bt.gattCmd.ReadCharacteristics()
 
