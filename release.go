@@ -2,11 +2,17 @@
 
 package main
 
-import "github.com/bugsnag/bugsnag-go"
+import (
+	"github.com/bugsnag/bugsnag-go"
+)
+
+var (
+	BugsnagKey = "" // set by build procedure
+)
 
 func init() {
 	bugsnag.Configure(bugsnag.Configuration{
-		APIKey:       "7b66d4013bdcd0541287fd9b00376253",
+		APIKey:       BugsnagKey,
 		ReleaseStage: "production",
 	})
 }
