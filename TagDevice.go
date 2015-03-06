@@ -37,8 +37,7 @@ type BLETag struct {
 	readChar  *bluez.Characteristic
 	alertChar *bluez.Characteristic
 
-	device *gatt.DiscoveredDevice
-
+	// device *gatt.DiscoveredDevice
 	// service   gatt.ServiceDescription
 	// readChar  gatt.CharacteristicDescription
 	// writeChar gatt.CharacteristicDescription
@@ -54,13 +53,16 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 		return nil
 	}
 
+	if device.PublicAddress {
+		return fmt.Errorf("Public addresses not supported, upgrade the firmware!")
+	}
+
 	log.Infof("Found BLE Tag address=%s public=%v", address, device.PublicAddress)
 
 	name := "BLE Tag"
 
 	bt := &BLETag{
 		driver: driver,
-		device: device,
 		info: &model.Device{
 			NaturalID:     address,
 			NaturalIDType: "BLE Mac",
@@ -97,33 +99,12 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 
 	driver.FoundTags[address] = true
 
-	if device.PublicAddress {
-		return fmt.Errorf("Public addresses not supported, upgrade the firmware!")
-	}
-
 	bt.gattCmd = bluez.NewGattCmd(address, bluez.AddrTypeRandom)
 
-	chars, err := bt.gattCmd.ReadCharacteristics()
+	err = bt.cacheCharacteristHandles()
 
 	if err != nil {
 		return fmt.Errorf("Discovery Error: %s", err)
-	}
-
-	for _, char := range chars {
-		if char.UUID == stickNFindReadUUID {
-			bt.readChar = char
-		}
-		if char.UUID == stickNFindWriteUUID {
-			bt.alertChar = char
-		}
-	}
-
-	if bt.alertChar == nil {
-		return fmt.Errorf("Alert characteristic not found")
-	}
-
-	if bt.readChar == nil {
-		return fmt.Errorf("Read characteristic not found")
 	}
 
 	time.Sleep(1 * time.Second)
@@ -131,6 +112,73 @@ func NewBLETag(driver *BLETagDriver, device *gatt.DiscoveredDevice) error {
 	if err := bt.gattCmd.WriteCharacteristic(bt.alertChar.CharValueHandle, "0103"); err != nil {
 		return fmt.Errorf("Alert characteristic write failed: %v", err)
 	}
+
+	// TODO Save the configuration
+	driver.saveNewTag(device.Address, device.PublicAddress, bt.readChar, bt.alertChar)
+
+	return nil
+}
+
+func NewBLETagFromConfig(driver *BLETagDriver, tagConfig *BleTagConfig) error {
+
+	log.Infof("Found BLE Tag address=%s public=%v", tagConfig.Address, tagConfig.PublicAddress)
+
+	name := "BLE Tag"
+
+	bt := &BLETag{
+		driver: driver,
+		info: &model.Device{
+			NaturalID:     tagConfig.Address,
+			NaturalIDType: "BLE Mac",
+			Name:          &name, //TODO Fill me in with retrieved value
+			Signatures: &map[string]string{
+				"ninja:manufacturer": "Sticknfind",
+				"ninja:productName":  "SL6",
+				"ninja:productType":  "BLE Tag",
+				"ninja:thingType":    "tag",
+			},
+		},
+	}
+
+	conn := driver.conn
+
+	err := conn.ExportDevice(bt)
+	if err != nil {
+		btlog.Fatalf("Failed to export BLE Tag %+v %s", bt, err)
+	}
+
+	bt.identifyChannel = channels.NewIdentifyChannel(bt)
+	err = conn.ExportChannel(bt, bt.identifyChannel, "identify")
+	if err != nil {
+		fplog.Fatalf("Failed to export BLE Tag identify channel %s, dumping device info", err)
+		spew.Dump(bt)
+	}
+
+	bt.onOffChannel = channels.NewOnOffChannel(bt)
+	err = conn.ExportChannel(bt, bt.onOffChannel, "on-off")
+	if err != nil {
+		fplog.Fatalf("Failed to export BLE Tag on-off channel %s, dumping device info", err)
+		spew.Dump(bt)
+	}
+
+	driver.FoundTags[tagConfig.Address] = true
+
+	bt.gattCmd = bluez.NewGattCmd(tagConfig.Address, bluez.AddrTypeRandom)
+
+	bt.alertChar = &bluez.Characteristic{
+		UUID:            tagConfig.AlertUUID,
+		Handle:          tagConfig.AlertHandle,
+		CharValueHandle: tagConfig.AlertCharValueHandle,
+	}
+
+	bt.readChar = &bluez.Characteristic{
+		UUID:            tagConfig.ReadUUID,
+		Handle:          tagConfig.ReadHandle,
+		CharValueHandle: tagConfig.ReadCharValueHandle,
+	}
+
+	// We ATTEMPT to refresh the characteristics, if the device is not nearby this is OK.
+	//	bt.cacheCharacteristHandles()
 
 	return nil
 }
@@ -215,5 +263,33 @@ func (fp *BLETag) Identify() error {
 		log.Warningf("Failed to identify", e)
 		return e
 	}
+	return nil
+}
+
+func (fp *BLETag) cacheCharacteristHandles() error {
+
+	chars, err := fp.gattCmd.ReadCharacteristics()
+
+	if err != nil {
+		return fmt.Errorf("Discovery Error: %s", err)
+	}
+
+	for _, char := range chars {
+		if char.UUID == stickNFindReadUUID {
+			fp.readChar = char
+		}
+		if char.UUID == stickNFindWriteUUID {
+			fp.alertChar = char
+		}
+	}
+
+	if fp.alertChar == nil {
+		return fmt.Errorf("Alert characteristic not found")
+	}
+
+	if fp.readChar == nil {
+		return fmt.Errorf("Read characteristic not found")
+	}
+
 	return nil
 }

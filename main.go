@@ -81,6 +81,7 @@ func main() {
 }
 
 func handleAdvertisement(device *gatt.DiscoveredDevice) {
+
 	if device.Advertisement.LocalName == "NinjaSphereWaypoint" {
 		log.Infof("Found waypoint %s", device.Address)
 		wpDriver.handleSphereWaypoint(device)
@@ -99,6 +100,7 @@ func handleAdvertisement(device *gatt.DiscoveredDevice) {
 		}
 	}
 
+	// look for tags which are CLOSE to the sphere!!
 	for uuid := range device.Advertisement.ServiceUuids {
 		if uuid == stickNFindServiceUuid {
 			if device.Rssi > minRSSI {
