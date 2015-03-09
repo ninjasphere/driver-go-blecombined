@@ -1,6 +1,8 @@
 package main
 
 import (
+	"sync"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ninjasphere/driver-go-blecombined/bluez"
 	"github.com/ninjasphere/gatt"
@@ -19,6 +21,7 @@ type BLETagDriver struct {
 	gattClient *gatt.Client
 	running    bool
 	FoundTags  map[string]bool
+	lkConfig   sync.Mutex
 	Config     *Config
 }
 
@@ -82,6 +85,10 @@ func (fp *BLETagDriver) Stop() error {
 
 func (fp *BLETagDriver) saveNewTag(address string, publicAddress bool, readChar *bluez.Characteristic, alertChar *bluez.Characteristic) {
 
+	fp.lkConfig.Lock()
+
+	defer fp.lkConfig.Unlock()
+
 	btlog.Debugf(spew.Sprintf("saveNewTag %s %t %#v %#v", address, publicAddress, readChar, alertChar))
 
 	bleConfig := &BleTagConfig{
@@ -94,6 +101,15 @@ func (fp *BLETagDriver) saveNewTag(address string, publicAddress bool, readChar 
 		AlertHandle:          alertChar.Handle,
 		AlertCharValueHandle: alertChar.CharValueHandle,
 	}
+
+	// replace in the list
+	for i, bleTag := range fp.Config.BleTags {
+		if bleTag.Address == bleConfig.Address {
+			// delete that entry
+			fp.Config.BleTags = append(fp.Config.BleTags[:i], fp.Config.BleTags[i+1:]...)
+		}
+	}
+
 	// apend to the configuration
 	fp.Config.BleTags = append(fp.Config.BleTags, bleConfig)
 

@@ -178,7 +178,10 @@ func NewBLETagFromConfig(driver *BLETagDriver, tagConfig *BleTagConfig) error {
 	}
 
 	// We ATTEMPT to refresh the characteristics, if the device is not nearby this is OK.
-	//	bt.cacheCharacteristHandles()
+	bt.cacheCharacteristHandles()
+
+	// Update the configuration
+	driver.saveNewTag(tagConfig.Address, tagConfig.PublicAddress, bt.readChar, bt.alertChar)
 
 	return nil
 }
