@@ -30,7 +30,7 @@ func main() {
 	}
 
 	// use hciconfig to the get the mac address
-	out, err := exec.Command("hciconfig").Output()
+	out, err = exec.Command("hciconfig").Output()
 	if err != nil {
 		log.Errorf(fmt.Sprintf("Error: %s", err))
 	}
