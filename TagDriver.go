@@ -38,6 +38,7 @@ func NewBLETagDriver(client *gatt.Client) (*BLETagDriver, error) {
 		conn:       conn,
 		gattClient: client,
 		running:    true,
+		Config:     &Config{},
 	}
 
 	err = conn.ExportDriver(driver)
@@ -68,10 +69,10 @@ func (d *BLETagDriver) SetEventHandler(sendEvent func(event string, payload inte
 
 func (fp *BLETagDriver) Start(config *Config) error {
 	btlog.Infof(spew.Sprintf("Starting BLE tag driver %v", config))
-	fp.Config = config
 
-	for _, tagConfig := range fp.Config.BleTags {
-		NewBLETagFromConfig(fp, tagConfig)
+	for _, tagConfig := range config.BleTags {
+		btlog.Infof("NewBLETagFromConfig address=%s", tagConfig.Address)
+		NewBLETagFromConfig(fp, tagConfig) // NOTE: This also saves it to the configuration
 	}
 
 	fp.running = true
