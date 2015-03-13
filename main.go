@@ -25,12 +25,12 @@ func main() {
 	log.Infof("BLE Driver Starting")
 
 	// reset BLE layer
-	out, err := exec.Command("/opt/ninjablocks/bin/sphere-ble-reset status").Output()
+	out, err := exec.Command("/opt/ninjablocks/bin/sphere-ble-reset", "status").Output()
 	if err != nil {
 		log.Errorf(fmt.Sprintf("error: while checking status of BLE connection: %s. ignoring reset logic.", err))
 	} else {
 		log.Errorf("error: detected case where BLE stack could not be started properly. signalling need for reset...")
-		out, err = exec.Command("/opt/ninjablocks/bin/sphere-ble-reset signal-reset").Output()
+		out, err = exec.Command("/opt/ninjablocks/bin/sphere-ble-reset", "signal-reset").Output()
 		if err == nil {
 			log.Errorf("signalling successful. blocking until stopped by reset logic.")
 			support.WaitUntilSignal()
