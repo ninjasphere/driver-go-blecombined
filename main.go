@@ -10,7 +10,6 @@ import (
 
 	"github.com/ninjasphere/gatt"
 	"github.com/ninjasphere/go-ninja/logger"
-	"github.com/ninjasphere/go-ninja/support"
 )
 
 var log = logger.GetLogger("driver-go-blecombined")
@@ -22,32 +21,13 @@ var sent = false
 
 func main() {
 
-	log.Infof("BLE Driver Starting...")
+	log.Infof("BLE Driver Starting")
 
-	// check if the BLE layer is properly started
-	out, _ := exec.Command("/opt/ninjablocks/bin/sphere-ble-reset", "status").Output()
-	outS := string(out)
-	bad := strings.HasPrefix(outS, "BAD")
-	started := strings.HasPrefix(outS, "STARTED")
-
-	var err error
-
-	if !bad && !started {
-		// if it isn't one of these sphere-ble-reset isn't working properly and must be ignored
-		log.Errorf(fmt.Sprintf("warning: unexpected output encountered while checking status of BLE connection (%s, %v). continuing with trepidation...", outS, err))
-	} else if !started {
-		// if we defintely are not started, then this is a reset case.
-		log.Errorf("error: BLE stack is not currently started. Now signalling the need for a reset...")
-		out, err = exec.Command("/opt/ninjablocks/bin/sphere-ble-reset", "signal-reset").Output()
-		if err == nil {
-			log.Errorf("info: signalling successful. blocking until stopped by reset logic.")
-			support.WaitUntilSignal()
-		} else {
-			log.Errorf("warning: unexpected condition: signalling unsuccessful. continuing with trepidation...")
-		}
+	// reset BLE layer
+	out, err := exec.Command("/opt/ninjablocks/bin/sphere-ble-reset").Output()
+	if err != nil {
+		log.Errorf(fmt.Sprintf("Error: %s", err))
 	}
-
-	// Either the BLE layer is healthy or the reset paths are broken and we need to continue with trepidation...
 
 	// use hciconfig to the get the mac address
 	out, err = exec.Command("hciconfig").Output()
