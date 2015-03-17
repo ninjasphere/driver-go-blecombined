@@ -24,7 +24,7 @@ func main() {
 	log.Infof("BLE Driver Starting")
 
 	// reset BLE layer
-	out, err := exec.Command("/opt/ninjablocks/bin/sphere-ble-reset").Output()
+	out, err := exec.Command("/opt/ninjablocks/bin/sphere-ble-reset", "ble-startup").Output()
 	if err != nil {
 		log.Errorf(fmt.Sprintf("Error: %s", err))
 	}
